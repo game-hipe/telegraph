@@ -1,2 +1,2 @@
 httpx==0.28.1
-libcst==1.8.6
+libcst
