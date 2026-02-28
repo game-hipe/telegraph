@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import requests
+import httpx
 
 from .exceptions import TelegraphException, RetryAfterError
 from .utils import html_to_nodes, nodes_to_html, FilesOpener, json_dumps
@@ -20,7 +20,7 @@ class TelegraphApi:
     def __init__(self, access_token=None, domain="telegra.ph"):
         self.access_token = access_token
         self.domain = domain
-        self.session = requests.Session()
+        self.session = httpx.Client()
 
     def method(self, method, values=None, path=""):
         values = values.copy() if values is not None else {}
