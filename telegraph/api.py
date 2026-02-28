@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
 
 import requests
 
@@ -8,7 +7,7 @@ from .utils import html_to_nodes, nodes_to_html, FilesOpener, json_dumps
 
 
 class TelegraphApi:
-    """ Telegraph API Client
+    """Telegraph API Client
 
     :param access_token: access_token
     :type access_token: str
@@ -16,36 +15,35 @@ class TelegraphApi:
     :param domain: domain (e.g. alternative mirror graph.org)
     """
 
-    __slots__ = ('access_token', 'domain', 'session')
+    __slots__ = ("access_token", "domain", "session")
 
-    def __init__(self, access_token=None, domain='telegra.ph'):
+    def __init__(self, access_token=None, domain="telegra.ph"):
         self.access_token = access_token
         self.domain = domain
         self.session = requests.Session()
 
-    def method(self, method, values=None, path=''):
+    def method(self, method, values=None, path=""):
         values = values.copy() if values is not None else {}
 
-        if 'access_token' not in values and self.access_token:
-            values['access_token'] = self.access_token
+        if "access_token" not in values and self.access_token:
+            values["access_token"] = self.access_token
 
         response = self.session.post(
-            'https://api.{}/{}/{}'.format(self.domain, method, path),
-            data=values
+            "https://api.{}/{}/{}".format(self.domain, method, path), data=values
         ).json()
 
-        if response.get('ok'):
-            return response['result']
+        if response.get("ok"):
+            return response["result"]
 
-        error = response.get('error')
-        if isinstance(error, str) and error.startswith('FLOOD_WAIT_'):
-            retry_after = int(error.rsplit('_', 1)[-1])
+        error = response.get("error")
+        if isinstance(error, str) and error.startswith("FLOOD_WAIT_"):
+            retry_after = int(error.rsplit("_", 1)[-1])
             raise RetryAfterError(retry_after)
         else:
             raise TelegraphException(error)
 
     def upload_file(self, f):
-        """ Upload file. NOT PART OF OFFICIAL API, USE AT YOUR OWN RISK
+        """Upload file. NOT PART OF OFFICIAL API, USE AT YOUR OWN RISK
             Returns a list of dicts with `src` key.
             Allowed only .jpg, .jpeg, .png, .gif and .mp4 files.
 
@@ -54,18 +52,17 @@ class TelegraphApi:
         """
         with FilesOpener(f) as files:
             response = self.session.post(
-                'https://{}/upload'.format(self.domain),
-                files=files
+                "https://{}/upload".format(self.domain), files=files
             ).json()
 
         if isinstance(response, list):
-            error = response[0].get('error')
+            error = response[0].get("error")
         else:
-            error = response.get('error')
+            error = response.get("error")
 
         if error:
-            if isinstance(error, str) and error.startswith('FLOOD_WAIT_'):
-                retry_after = int(error.rsplit('_',1)[-1])
+            if isinstance(error, str) and error.startswith("FLOOD_WAIT_"):
+                retry_after = int(error.rsplit("_", 1)[-1])
                 raise RetryAfterError(retry_after)
             else:
                 raise TelegraphException(error)
@@ -74,24 +71,25 @@ class TelegraphApi:
 
 
 class Telegraph:
-    """ Telegraph API client helper
+    """Telegraph API client helper
 
     :param access_token: access token
     :param domain: domain (e.g. alternative mirror graph.org)
     """
 
-    __slots__ = ('_telegraph',)
+    __slots__ = ("_telegraph",)
 
-    def __init__(self, access_token=None, domain='telegra.ph'):
+    def __init__(self, access_token=None, domain="telegra.ph"):
         self._telegraph = TelegraphApi(access_token, domain)
 
     def get_access_token(self):
         """Get current access_token"""
         return self._telegraph.access_token
 
-    def create_account(self, short_name, author_name=None, author_url=None,
-                       replace_token=True):
-        """ Create a new Telegraph account
+    def create_account(
+        self, short_name, author_name=None, author_url=None, replace_token=True
+    ):
+        """Create a new Telegraph account
 
         :param short_name: Account name, helps users with several
                            accounts remember which they are currently using.
@@ -103,20 +101,22 @@ class Telegraph:
                            not necessarily to a Telegram profile or channels
         :param replace_token: Replaces current token to a new user's token
         """
-        response = self._telegraph.method('createAccount', values={
-            'short_name': short_name,
-            'author_name': author_name,
-            'author_url': author_url
-        })
+        response = self._telegraph.method(
+            "createAccount",
+            values={
+                "short_name": short_name,
+                "author_name": author_name,
+                "author_url": author_url,
+            },
+        )
 
         if replace_token:
-            self._telegraph.access_token = response.get('access_token')
+            self._telegraph.access_token = response.get("access_token")
 
         return response
 
-    def edit_account_info(self, short_name=None, author_name=None,
-                          author_url=None):
-        """ Update information about a Telegraph account.
+    def edit_account_info(self, short_name=None, author_name=None, author_url=None):
+        """Update information about a Telegraph account.
             Pass only the parameters that you want to edit
 
         :param short_name: Account name, helps users with several
@@ -128,44 +128,54 @@ class Telegraph:
                            author's name below the title. Can be any link,
                            not necessarily to a Telegram profile or channels
         """
-        return self._telegraph.method('editAccountInfo', values={
-            'short_name': short_name,
-            'author_name': author_name,
-            'author_url': author_url
-        })
+        return self._telegraph.method(
+            "editAccountInfo",
+            values={
+                "short_name": short_name,
+                "author_name": author_name,
+                "author_url": author_url,
+            },
+        )
 
     def revoke_access_token(self):
-        """ Revoke access_token and generate a new one, for example,
-            if the user would like to reset all connected sessions, or
-            you have reasons to believe the token was compromised.
-            On success, returns dict with new access_token and auth_url fields
+        """Revoke access_token and generate a new one, for example,
+        if the user would like to reset all connected sessions, or
+        you have reasons to believe the token was compromised.
+        On success, returns dict with new access_token and auth_url fields
         """
-        response = self._telegraph.method('revokeAccessToken')
+        response = self._telegraph.method("revokeAccessToken")
 
-        self._telegraph.access_token = response.get('access_token')
+        self._telegraph.access_token = response.get("access_token")
 
         return response
 
     def get_page(self, path, return_content=True, return_html=True):
-        """ Get a Telegraph page
+        """Get a Telegraph page
 
         :param path: Path to the Telegraph page (in the format Title-12-31,
                      i.e. everything that comes after https://telegra.ph/)
         :param return_content: If true, content field will be returned
         :param return_html: If true, returns HTML instead of Nodes list
         """
-        response = self._telegraph.method('getPage', path=path, values={
-            'return_content': return_content
-        })
+        response = self._telegraph.method(
+            "getPage", path=path, values={"return_content": return_content}
+        )
 
         if return_content and return_html:
-            response['content'] = nodes_to_html(response['content'])
+            response["content"] = nodes_to_html(response["content"])
 
         return response
 
-    def create_page(self, title, content=None, html_content=None,
-                    author_name=None, author_url=None, return_content=False):
-        """ Create a new Telegraph page
+    def create_page(
+        self,
+        title,
+        content=None,
+        html_content=None,
+        author_name=None,
+        author_url=None,
+        return_content=False,
+    ):
+        """Create a new Telegraph page
 
         :param title: Page title
         :param content: Content in nodes list format (see doc)
@@ -180,17 +190,28 @@ class Telegraph:
 
         content_json = json_dumps(content)
 
-        return self._telegraph.method('createPage', values={
-            'title': title,
-            'author_name': author_name,
-            'author_url': author_url,
-            'content': content_json,
-            'return_content': return_content
-        })
+        return self._telegraph.method(
+            "createPage",
+            values={
+                "title": title,
+                "author_name": author_name,
+                "author_url": author_url,
+                "content": content_json,
+                "return_content": return_content,
+            },
+        )
 
-    def edit_page(self, path, title, content=None, html_content=None,
-                  author_name=None, author_url=None, return_content=False):
-        """ Edit an existing Telegraph page
+    def edit_page(
+        self,
+        path,
+        title,
+        content=None,
+        html_content=None,
+        author_name=None,
+        author_url=None,
+        return_content=False,
+    ):
+        """Edit an existing Telegraph page
 
         :param path: Path to the page
         :param title: Page title
@@ -206,28 +227,32 @@ class Telegraph:
 
         content_json = json_dumps(content)
 
-        return self._telegraph.method('editPage', path=path, values={
-            'title': title,
-            'author_name': author_name,
-            'author_url': author_url,
-            'content': content_json,
-            'return_content': return_content
-        })
+        return self._telegraph.method(
+            "editPage",
+            path=path,
+            values={
+                "title": title,
+                "author_name": author_name,
+                "author_url": author_url,
+                "content": content_json,
+                "return_content": return_content,
+            },
+        )
 
     def get_account_info(self, fields=None):
-        """ Get information about a Telegraph account
+        """Get information about a Telegraph account
 
         :param fields: List of account fields to return. Available fields:
                        short_name, author_name, author_url, auth_url, page_count
 
                        Default: [“short_name”,“author_name”,“author_url”]
         """
-        return self._telegraph.method('getAccountInfo', {
-            'fields': json_dumps(fields) if fields else None
-        })
+        return self._telegraph.method(
+            "getAccountInfo", {"fields": json_dumps(fields) if fields else None}
+        )
 
     def get_page_list(self, offset=0, limit=50):
-        """ Get a list of pages belonging to a Telegraph account
+        """Get a list of pages belonging to a Telegraph account
             sorted by most recently created pages first
 
         :param offset: Sequential number of the first page to be returned
@@ -235,13 +260,10 @@ class Telegraph:
         :param limit: Limits the number of pages to be retrieved
                       (0-200, default = 50)
         """
-        return self._telegraph.method('getPageList', {
-            'offset': offset,
-            'limit': limit
-        })
+        return self._telegraph.method("getPageList", {"offset": offset, "limit": limit})
 
     def get_views(self, path, year=None, month=None, day=None, hour=None):
-        """ Get the number of views for a Telegraph article
+        """Get the number of views for a Telegraph article
 
         :param path: Path to the Telegraph page
         :param year: Required if month is passed. If passed, the number of
@@ -253,15 +275,14 @@ class Telegraph:
         :param hour: If passed, the number of page views for
                      the requested hour will be returned
         """
-        return self._telegraph.method('getViews', path=path, values={
-            'year': year,
-            'month': month,
-            'day': day,
-            'hour': hour
-        })
+        return self._telegraph.method(
+            "getViews",
+            path=path,
+            values={"year": year, "month": month, "day": day, "hour": hour},
+        )
 
     def upload_file(self, f):
-        """ Upload file. NOT PART OF OFFICIAL API, USE AT YOUR OWN RISK
+        """Upload file. NOT PART OF OFFICIAL API, USE AT YOUR OWN RISK
             Returns a list of dicts with `src` key.
             Allowed only .jpg, .jpeg, .png, .gif and .mp4 files.
 
