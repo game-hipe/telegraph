@@ -35,10 +35,7 @@ setup(
     ),
     license="MIT",
     packages=["telegraph"],
-    install_requires=["requests"],
-    extras_require={
-        "aio": ["httpx"],
-    },
+    install_requires=["httpx"],
     classifiers=[
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
@@ -49,5 +46,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
     ],
 )

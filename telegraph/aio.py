@@ -323,3 +323,13 @@ class Telegraph:
         :type f: file, str or list
         """
         return await self._telegraph.upload_file(f)
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        await self.aclose()
+
+    async def aclose(self):
+        if not self._telegraph.session.is_closed:
+            await self._telegraph.session.aclose()

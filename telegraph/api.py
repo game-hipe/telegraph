@@ -317,3 +317,13 @@ class Telegraph:
         :type f: file, str or list
         """
         return self._telegraph.upload_file(f)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.close()
+
+    def close(self):
+        if not self._telegraph.session.is_closed:
+            self._telegraph.session.close()
