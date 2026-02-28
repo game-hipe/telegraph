@@ -2,6 +2,14 @@
 
 import httpx
 
+from os import PathLike
+from typing import Union, Optional, Any, List
+
+try:
+    from typing import BinaryIO
+except ImportError:
+    from typing.io import BinaryIO
+
 from .exceptions import TelegraphException, RetryAfterError
 from .utils import html_to_nodes, nodes_to_html, FilesOpener, json_dumps
 
@@ -17,12 +25,12 @@ class TelegraphApi:
 
     __slots__ = ("access_token", "domain", "session")
 
-    def __init__(self, access_token=None, domain="telegra.ph"):
+    def __init__(self, access_token: Optional[str] = None, domain: str = "telegra.ph"):
         self.access_token = access_token
         self.domain = domain
         self.session = httpx.Client()
 
-    def method(self, method, values=None, path=""):
+    def method(self, method: str, values: Any = None, path: str = ""):
         values = values.copy() if values is not None else {}
 
         if "access_token" not in values and self.access_token:
@@ -42,7 +50,7 @@ class TelegraphApi:
         else:
             raise TelegraphException(error)
 
-    def upload_file(self, f):
+    def upload_file(self, f: Union[PathLike[str], BinaryIO]):
         """Upload file. NOT PART OF OFFICIAL API, USE AT YOUR OWN RISK
             Returns a list of dicts with `src` key.
             Allowed only .jpg, .jpeg, .png, .gif and .mp4 files.
@@ -79,7 +87,7 @@ class Telegraph:
 
     __slots__ = ("_telegraph",)
 
-    def __init__(self, access_token=None, domain="telegra.ph"):
+    def __init__(self, access_token: Optional[str] = None, domain: str = "telegra.ph"):
         self._telegraph = TelegraphApi(access_token, domain)
 
     def get_access_token(self):
@@ -87,7 +95,11 @@ class Telegraph:
         return self._telegraph.access_token
 
     def create_account(
-        self, short_name, author_name=None, author_url=None, replace_token=True
+        self,
+        short_name: str,
+        author_name: Union[str, None] = None,
+        author_url: Union[str, None] = None,
+        replace_token: bool = True,
     ):
         """Create a new Telegraph account
 
@@ -115,7 +127,12 @@ class Telegraph:
 
         return response
 
-    def edit_account_info(self, short_name=None, author_name=None, author_url=None):
+    def edit_account_info(
+        self,
+        short_name: Union[str, None] = None,
+        author_name: Union[str, None] = None,
+        author_url: Union[str, None] = None,
+    ):
         """Update information about a Telegraph account.
             Pass only the parameters that you want to edit
 
@@ -149,7 +166,9 @@ class Telegraph:
 
         return response
 
-    def get_page(self, path, return_content=True, return_html=True):
+    def get_page(
+        self, path: str, return_content: bool = True, return_html: bool = True
+    ):
         """Get a Telegraph page
 
         :param path: Path to the Telegraph page (in the format Title-12-31,
@@ -168,12 +187,12 @@ class Telegraph:
 
     def create_page(
         self,
-        title,
-        content=None,
-        html_content=None,
-        author_name=None,
-        author_url=None,
-        return_content=False,
+        title: str,
+        content: List[Any] = None,
+        html_content: Union[str, None] = None,
+        author_name: Union[str, None] = None,
+        author_url: Union[str, None] = None,
+        return_content: bool = False,
     ):
         """Create a new Telegraph page
 
@@ -203,13 +222,13 @@ class Telegraph:
 
     def edit_page(
         self,
-        path,
-        title,
-        content=None,
-        html_content=None,
-        author_name=None,
-        author_url=None,
-        return_content=False,
+        path: str,
+        title: str,
+        content: List[Any] = None,
+        html_content: Union[str, None] = None,
+        author_name: Union[str, None] = None,
+        author_url: Union[str, None] = None,
+        return_content: bool = False,
     ):
         """Edit an existing Telegraph page
 
@@ -239,7 +258,7 @@ class Telegraph:
             },
         )
 
-    def get_account_info(self, fields=None):
+    def get_account_info(self, fields: Union[List[str], None] = None):
         """Get information about a Telegraph account
 
         :param fields: List of account fields to return. Available fields:
@@ -251,7 +270,7 @@ class Telegraph:
             "getAccountInfo", {"fields": json_dumps(fields) if fields else None}
         )
 
-    def get_page_list(self, offset=0, limit=50):
+    def get_page_list(self, offset: int = 0, limit: int = 50):
         """Get a list of pages belonging to a Telegraph account
             sorted by most recently created pages first
 
@@ -262,7 +281,14 @@ class Telegraph:
         """
         return self._telegraph.method("getPageList", {"offset": offset, "limit": limit})
 
-    def get_views(self, path, year=None, month=None, day=None, hour=None):
+    def get_views(
+        self,
+        path: str,
+        year: Union[int, None] = None,
+        month: Union[int, None] = None,
+        day: Union[int, None] = None,
+        hour: Union[int, None] = None,
+    ):
         """Get the number of views for a Telegraph article
 
         :param path: Path to the Telegraph page
@@ -281,7 +307,7 @@ class Telegraph:
             values={"year": year, "month": month, "day": day, "hour": hour},
         )
 
-    def upload_file(self, f):
+    def upload_file(self, f: Union[PathLike, BinaryIO]):
         """Upload file. NOT PART OF OFFICIAL API, USE AT YOUR OWN RISK
             Returns a list of dicts with `src` key.
             Allowed only .jpg, .jpeg, .png, .gif and .mp4 files.

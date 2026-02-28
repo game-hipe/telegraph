@@ -2,6 +2,15 @@
 import mimetypes
 import re
 import json
+
+from os import PathLike
+from typing import Union, List
+
+try:
+    from typing import BinaryIO
+except ImportError:
+    from typing.io import BinaryIO
+
 from html.parser import HTMLParser
 from html.entities import name2codepoint
 from html import escape
@@ -246,7 +255,11 @@ def nodes_to_html(nodes):
 
 
 class FilesOpener(object):
-    def __init__(self, paths, key_format="file{}"):
+    def __init__(
+        self,
+        paths: Union[PathLike[str], List[PathLike[str]], BinaryIO],
+        key_format: str = "file{}",
+    ):
         if not isinstance(paths, list):
             paths = [paths]
 
